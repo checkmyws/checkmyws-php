@@ -3,7 +3,7 @@ checkmyws-php
 
 [Check my Website](https://checkmy.ws) client for PHP
 
-    php -a
+    $ php -a
     php > require_once('library/Client.php');
     php > $client = new CheckmywsClient();
     php > $data = $client->status('3887e18a-28d6-4eac-9eb0-c6d9075e4c7e');
