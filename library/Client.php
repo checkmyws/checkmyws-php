@@ -8,11 +8,14 @@ class CheckmywsClient {
     const VERSION = '0.1';
     const BASE_URL = 'https://api.checkmy.ws/api';
 
-    public function request($path, $method="GET", $params=NULL, $data=NULL, $status_code=200) {
+    public function request($path, $method="GET", $data=NULL, $status_code=200, $timeout=10) {
         $url = self::BASE_URL . $path;
 
         $headers = array();
-        $options = array();
+        $options = array(
+            'connect_timeout' => 3,
+            'timeout' => $timeout
+        );
 
         $response = Requests::request($url, $headers, $data, $method, $options);
 

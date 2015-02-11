@@ -11,14 +11,20 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
 
         $client = new CheckmywsClient();
 
-        $body = $client->request('/dummy', $method="GET", $status_code=200);
+        $body = $client->request('/dummy', "GET");
         $this->assertContains("Dummy", $body);
 
-        $body = $client->request('/dummy/404', $method="GET", $status_code=200);
+        $body = $client->request('/dummy/404', "GET");
         $this->assertNull($body);
 
-        $body = $client->request('/status/' . $check_id, $method="GET", $status_code=200);
+        $body = $client->request('/dummy/404', "GET", NULL, 404);
+        $this->assertNotNull($body);
+
+        $body = $client->request('/status/' . $check_id, "GET");
         $this->assertObjectHasAttribute('_id', $body);
+
+        //$body = $client->request('/dummy/5.0', "GET", NULL, 200, 1);
+        //$this->assertNull($body);
     }
 
     public function testStatus() {
