@@ -24,6 +24,10 @@ class CheckmywsClient {
             $this->passwd = sha1($passwd);
     }
 
+    public function __destruct() {
+        $this->logout();
+    }
+
     public function request($path, $method="GET", $data=NULL, $status_code=200, $timeout=NULL) {
         $url = $this->base_url . $path;
 
@@ -95,7 +99,7 @@ class CheckmywsClient {
         if (! $this->account)
             return;
 
-        $path = "/logout";
+        $path = "/auth/logout";
         $response = $this->request($path, "GET");
         $this->account = NULL;
         $this->cookie = NULL;
@@ -134,6 +138,40 @@ class CheckmywsClient {
 
         $path = "/checks/" . $check_id;
         return $this->request($path, "GET");
+    }
+
+    public function check_overview($check_id) {
+        $this->signin();
+
+        $path = "/overview/" . $check_id;
+        return $this->request($path, "GET");
+    }
+
+    public function check_metrics($check_id, $metrics, $start_absolute=NULL, $end_absolute=NULL, $location=NULL, $sampling=60, $aggregator="avg") {
+        $this->signin();
+
+        $path = "/datapoints/checks/" . $check_id;
+
+        $data = array(
+            "metrics" => $metrics
+        );
+
+        if ($aggregator)
+            $data['aggregator'] = $aggregator;
+
+        if ($sampling)
+            $data['sampling'] = $sampling;
+
+        if ($end_absolute)
+            $data['end_absolute'] = $end_absolute;
+
+        if ($start_absolute)
+            $data['start_absolute'] = $start_absolute;
+
+        if ($location)
+            $data['location'] = $location;
+
+        return $this->request($path, "POST", $data);
     }
 
     public function check_create($data) {

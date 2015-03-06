@@ -133,6 +133,10 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
         $this->assertNotNull($check);
         $this->assertEquals($check->_id, $check_id);
 
+        // Overview
+        $overview = $client->check_overview($check_id);
+        $this->assertNotNull($overview);
+
         // Update
         $check = $client->check_update($check->_id, array(
             "pattern" => "test"
@@ -145,7 +149,7 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
         // List
         $checks = $client->checks();
         $this->assertNotNull($checks);
-        $this->assertEquals(count($checks), 1);
+        $this->assertEquals(count($checks), 2);
 
         // Delete
         $client->check_delete($check_id);
@@ -154,6 +158,24 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
         $this->assertNull($check);
 
         $client->logout();
+    }
+
+    public function testChecks_Metrics() {
+        $check_id = "e552e72d-3953-4ea8-b68f-4516681df91a";
+
+        $client = new CheckmywsClient("unittest", "unittest");
+        $client->base_url = "https://api.dev.checkmy.ws/api";
+        $client->strict_ssl = false;
+
+        $data = $client->check_metrics($check_id, ["httptime"]);
+
+        $this->assertEquals($data->length, 1);
+        $this->assertNotNull($data->series);
+
+        $data = $client->check_metrics($check_id, "httptime");
+
+        $this->assertEquals($data->length, 1);
+        $this->assertNotNull($data->series);
     }
 }
 
