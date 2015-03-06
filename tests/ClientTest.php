@@ -23,9 +23,10 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
         $body = $client->request('/status/' . $check_id, "GET");
         $this->assertObjectHasAttribute('_id', $body);
 
-        //$body = $client->request('/dummy/5.0', "GET", NULL, 200, 1);
-        //$this->assertNull($body);
+        $body = $client->request('/dummy/5.0', "GET", NULL, 200, 1);
+        $this->assertNull($body);
     }
+
 
     public function testStatus() {
         global $check_id;
@@ -39,33 +40,121 @@ class CheckmywsClientTest extends PHPUnit_Framework_TestCase {
         $this->assertObjectHasAttribute('_id', $body);
     }
 
-    public function testLogs() {
+    public function testStatus_Logs() {
         global $check_id;
 
         $client = new CheckmywsClient();
 
-        $body = $client->logs('123456789');
+        $body = $client->status_logs('123456789');
         $this->assertNull($body);
 
-        $body = $client->logs($check_id);
+        $body = $client->status_logs($check_id);
         $this->assertInternalType('array', $body);
     }
 
-    public function testMetrics() {
+    public function testStatus_Metrics() {
         global $check_id;
 
         $client = new CheckmywsClient();
 
-        $body = $client->metrics('123456789');
+        $body = $client->status_metrics('123456789');
         $this->assertNull($body);
 
-        $body = $client->metrics($check_id);
+        $body = $client->status_metrics($check_id);
         $this->assertObjectHasAttribute('locations', $body);
 
-        $body = $client->metrics($check_id, $timewindow="day");
+        $body = $client->status_metrics($check_id, $timewindow="day");
         $this->assertObjectHasAttribute('locations', $body);
     }
 
+    public function testSignin() {
+        $client = new CheckmywsClient();
+
+        $account = $client->signin();
+
+        $this->assertNull($account);
+        $this->assertNull($client->account);
+
+        $client->logout();
+
+        // Check SSL
+        $client = new CheckmywsClient("unittest", "unittest");
+        $client->base_url = "https://api.dev.checkmy.ws/api";
+
+        $account = $client->signin();
+        $this->assertNull($account);
+
+        $client = new CheckmywsClient("unittest", "unittest");
+        $account = $client->signin();
+        $this->assertNull($account);
+
+        // Plain password
+        $client = new CheckmywsClient("unittest", "unittest");
+        $client->base_url = "https://api.dev.checkmy.ws/api";
+        $client->strict_ssl = false;
+
+        $account = $client->signin();
+
+        $this->assertNotNull($account);
+        $this->assertNotNull($client->account);
+        $this->assertNotNull($client->cookie);
+
+        $client->logout();
+        $this->assertNull($client->account);
+        $this->assertNull($client->cookie);
+
+        // SHA1 password
+        $client = new CheckmywsClient("unittest", "94e060874450b5ea724bb6ce5ca7be4f6a73416b");
+        $client->base_url = "https://api.dev.checkmy.ws/api";
+        $client->strict_ssl = false;
+
+        $account = $client->signin();
+        $this->assertNotNull($account);
+        $client->logout();
+    }
+
+    public function testChecks() {
+        $client = new CheckmywsClient("unittest", "unittest");
+        $client->base_url = "https://api.dev.checkmy.ws/api";
+        $client->strict_ssl = false;
+
+        // Create
+        $check = $client->check_create(array(
+            "url" => "http://www.checkmy.ws",
+            "locations" => ["FR:RBX:OVH:DC"]
+        ));
+
+        $this->assertNotNull($check->_id);
+
+        $check_id = $check->_id;
+
+        // Get
+        $check = $client->check($check_id);
+        $this->assertNotNull($check);
+        $this->assertEquals($check->_id, $check_id);
+
+        // Update
+        $check = $client->check_update($check->_id, array(
+            "pattern" => "test"
+        ));
+        $this->assertEquals($check->pattern, "test");
+
+        $check = $client->check($check_id);
+        $this->assertEquals($check->pattern, "test");
+
+        // List
+        $checks = $client->checks();
+        $this->assertNotNull($checks);
+        $this->assertEquals(count($checks), 1);
+
+        // Delete
+        $client->check_delete($check_id);
+
+        $check = $client->check($check_id);
+        $this->assertNull($check);
+
+        $client->logout();
+    }
 }
 
 ?>
