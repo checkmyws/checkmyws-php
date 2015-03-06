@@ -16,12 +16,6 @@ Installation
 To install the source code:
 
     $ git clone git@github.com:checkmyws/checkmyws-php.git
-
-Init submodules:
-
-    $ cd checkmyws-php
-    $ git submodule init
-    $ git submodule update
     
 And include it in your scripts:
 
